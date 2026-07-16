@@ -87,12 +87,9 @@ class SupplyChainApiController extends Controller
         $currencyVolatility = rand(1, 10) / 100; // Mocked volatility
 
         // Get Weather
-        $lat = 0; $lng = 0;
-        if ($isoCode == 'DEU') { $lat = 51.16; $lng = 10.45; }
-        if ($isoCode == 'CHN') { $lat = 35.86; $lng = 104.19; }
-        if ($isoCode == 'IDN') { $lat = -0.789; $lng = 113.92; }
-        if ($isoCode == 'AUS') { $lat = -25.27; $lng = 133.77; }
-        
+        $lat = $country->latitude ?? 0;
+        $lng = $country->longitude ?? 0;
+
         $weatherData = $this->apiService->getWeather($lat, $lng);
         
         // Get News Sentiment
@@ -110,11 +107,12 @@ class SupplyChainApiController extends Controller
         $scoreRecord = \App\Models\RiskScore::updateOrCreate(
             ['country_id' => $country->id],
             [
-                'total_score' => $riskScore['total'],
-                'weather_score' => $riskScore['weather'],
-                'inflation_score' => $riskScore['inflation'],
-                'currency_score' => $riskScore['currency'],
-                'news_score' => $riskScore['news']
+                'total_risk_score' => $riskScore['total'],
+                'weather_risk'     => $riskScore['weather'],
+                'inflation_risk'   => $riskScore['inflation'],
+                'currency_risk'    => $riskScore['currency'],
+                'news_risk'        => $riskScore['news'],
+                'risk_status'      => $riskScore['level'],
             ]
         );
 

@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CountrySeeder::class,
             WordSeeder::class,
+            PortSeeder::class,
         ]);
     }
 }

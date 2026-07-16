@@ -9,8 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet CSS (loaded per-page) -->
     
     <style>
         :root {
@@ -110,16 +109,60 @@
         
         .search-bar input {
             border-radius: 20px;
-            padding-left: 35px;
+            padding-left: 38px;
             border: none;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            outline: none;
         }
-
+        .search-bar input:focus {
+            box-shadow: 0 0 0 3px rgba(0,181,117,0.15);
+        }
         .search-bar i {
             position: absolute;
             left: 12px;
             top: 10px;
             color: var(--text-muted);
+            z-index: 2;
+        }
+        /* Search Autocomplete Dropdown */
+        #searchResults {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0; right: 0;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            z-index: 9999;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            border: 1px solid #f0f0f0;
+        }
+        #searchResults .result-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f8f8f8;
+        }
+        #searchResults .result-item:last-child { border-bottom: none; }
+        #searchResults .result-item:hover { background: #f0fdf8; color: #00b575; }
+        #searchResults .result-item .region-tag {
+            margin-left: auto;
+            font-size: 11px;
+            color: #aaa;
+            background: #f5f5f5;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        #searchResults .no-result {
+            padding: 14px 16px;
+            color: #aaa;
+            font-size: 13px;
+            text-align: center;
         }
 
         .user-profile {
@@ -212,7 +255,8 @@
         <div class="topbar">
             <div class="search-bar">
                 <i class="fa-solid fa-search"></i>
-                <input type="text" class="form-control" placeholder="Search country...">
+                <input type="text" id="globalSearch" class="form-control" placeholder="Search country..." autocomplete="off">
+                <div id="searchResults"></div>
             </div>
             <div class="user-profile">
                 <span class="text-muted text-sm fw-bold">ENG <i class="fa-solid fa-chevron-down ms-1"></i></span>
@@ -230,7 +274,76 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet JS (loaded per-page) -->
     @yield('scripts')
+    <script>
+    /* ===== GLOBAL SEARCH BAR (works on all pages) ===== */
+    (function() {
+        let allCountriesGlobal = [];
+
+        // Fetch countries once
+        $.get('/api/countries', function(data) {
+            allCountriesGlobal = data.sort((a, b) => a.name.localeCompare(b.name));
+        });
+
+        $('#globalSearch').on('input', function() {
+            const q = $(this).val().trim().toLowerCase();
+            const $results = $('#searchResults');
+
+            if (q.length < 1) { $results.hide(); return; }
+
+            const matches = allCountriesGlobal.filter(c =>
+                c.name.toLowerCase().includes(q) ||
+                (c.iso_code && c.iso_code.toLowerCase().includes(q)) ||
+                (c.region && c.region.toLowerCase().includes(q))
+            ).slice(0, 8);
+
+            if (matches.length === 0) {
+                $results.html('<div class="no-result">No country found</div>').show();
+                return;
+            }
+
+            let html = '';
+            matches.forEach(c => {
+                html += `<div class="result-item" data-iso="${c.iso_code}">
+                    <i class="fa-solid fa-location-dot" style="color:#00b575;"></i>
+                    <span>${c.name}</span>
+                    <span class="region-tag">${c.region || ''}</span>
+                </div>`;
+            });
+            $results.html(html).show();
+        });
+
+        // Click result → trigger fetchData via selector change
+        $(document).on('click', '.result-item', function() {
+            const iso = $(this).data('iso');
+            const name = $(this).find('span').first().text();
+            $('#globalSearch').val(name);
+            $('#searchResults').hide();
+
+            // If on dashboard page (countrySelector exists), update it
+            const $sel = $('#countrySelector');
+            if ($sel.length) {
+                $sel.val(iso).trigger('change');
+            }
+        });
+
+        // Hide dropdown when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.search-bar').length) {
+                $('#searchResults').hide();
+            }
+        });
+
+        // Keyboard navigation: Enter = pick first result
+        $('#globalSearch').on('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const $first = $('#searchResults .result-item').first();
+                if ($first.length) $first.trigger('click');
+            }
+            if (e.key === 'Escape') $('#searchResults').hide();
+        });
+    })();
+    </script>
 </body>
 </html>
