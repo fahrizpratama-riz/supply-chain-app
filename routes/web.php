@@ -25,3 +25,19 @@ Route::get('/news', function () {
 Route::get('/settings', function () {
     return view('dashboard.settings');
 });
+
+Route::get('/currency', function () {
+    return view('dashboard.currency');
+});
+
+Route::get('/compare', function () {
+    return view('dashboard.compare');
+});
+
+Route::get('/analytics', function () {
+    return view('dashboard.analytics');
+});
+
+Route::get('/admin', function () {
+    return view('dashboard.admin');
+});

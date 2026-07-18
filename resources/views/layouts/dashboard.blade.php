@@ -245,7 +245,19 @@
             <a href="/weather" class="text-decoration-none text-white"><li class="{{ request()->is('weather') ? 'active' : '' }}"><i class="fa-solid fa-cloud-sun-rain"></i> Weather</li></a>
             <a href="/ports" class="text-decoration-none text-white"><li class="{{ request()->is('ports') ? 'active' : '' }}"><i class="fa-solid fa-ship"></i> Ports</li></a>
             <a href="/news" class="text-decoration-none text-white"><li class="{{ request()->is('news') ? 'active' : '' }}"><i class="fa-solid fa-newspaper"></i> News</li></a>
+
+            {{-- Divider --}}
+            <li style="padding:6px 20px; opacity:0.35; font-size:10px; text-transform:uppercase; letter-spacing:1px; cursor:default; border-left:none !important; background:none !important;">Analytics</li>
+
+            <a href="/currency" class="text-decoration-none text-white"><li class="{{ request()->is('currency') ? 'active' : '' }}"><i class="fa-solid fa-money-bill-transfer"></i> Currency</li></a>
+            <a href="/compare" class="text-decoration-none text-white"><li class="{{ request()->is('compare') ? 'active' : '' }}"><i class="fa-solid fa-code-compare"></i> Compare</li></a>
+            <a href="/analytics" class="text-decoration-none text-white"><li class="{{ request()->is('analytics') ? 'active' : '' }}"><i class="fa-solid fa-chart-mixed"></i> Analytics</li></a>
+
+            {{-- Divider --}}
+            <li style="padding:6px 20px; opacity:0.35; font-size:10px; text-transform:uppercase; letter-spacing:1px; cursor:default; border-left:none !important; background:none !important;">System</li>
+
             <a href="/settings" class="text-decoration-none text-white"><li class="{{ request()->is('settings') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i> Settings</li></a>
+            <a href="/admin" class="text-decoration-none text-white"><li class="{{ request()->is('admin') ? 'active' : '' }}"><i class="fa-solid fa-shield-halved"></i> Admin</li></a>
         </ul>
     </div>
 
