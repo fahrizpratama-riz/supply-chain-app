@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             CountrySeeder::class,
             WordSeeder::class,
             PortSeeder::class,
+            UserSeeder::class,
         ]);
     }
 }

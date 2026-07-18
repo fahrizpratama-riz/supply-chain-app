@@ -234,12 +234,13 @@
 <body>
 
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" style="display:flex; flex-direction:column;">
         <div class="brand">
             <i class="fa-solid fa-earth-americas"></i>
             <span>SupplyChain</span>
         </div>
-        <ul class="sidebar-menu">
+
+        <ul class="sidebar-menu" style="flex:1; overflow-y:auto;">
             <a href="/" class="text-decoration-none text-white"><li class="{{ request()->is('/') ? 'active' : '' }}"><i class="fa-solid fa-chart-line"></i> Dashboard</li></a>
             <a href="/countries" class="text-decoration-none text-white"><li class="{{ request()->is('countries') ? 'active' : '' }}"><i class="fa-solid fa-globe"></i> Countries</li></a>
             <a href="/weather" class="text-decoration-none text-white"><li class="{{ request()->is('weather') ? 'active' : '' }}"><i class="fa-solid fa-cloud-sun-rain"></i> Weather</li></a>
@@ -257,8 +258,28 @@
             <li style="padding:6px 20px; opacity:0.35; font-size:10px; text-transform:uppercase; letter-spacing:1px; cursor:default; border-left:none !important; background:none !important;">System</li>
 
             <a href="/settings" class="text-decoration-none text-white"><li class="{{ request()->is('settings') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i> Settings</li></a>
+            @if(auth()->user()?->role === 'admin')
             <a href="/admin" class="text-decoration-none text-white"><li class="{{ request()->is('admin') ? 'active' : '' }}"><i class="fa-solid fa-shield-halved"></i> Admin</li></a>
+            @endif
         </ul>
+
+        {{-- User Info + Logout --}}
+        <div style="padding:16px; border-top:1px solid rgba(255,255,255,0.1); margin-top:auto;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()?->name ?? 'User') }}&background=009a62&color=fff&size=36"
+                    alt="Avatar" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;">
+                <div style="overflow:hidden;">
+                    <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">{{ auth()->user()?->name ?? 'Guest' }}</div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:.5px;">{{ auth()->user()?->role ?? 'user' }}</div>
+                </div>
+            </div>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" style="width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;" onmouseover="this.style.background='rgba(239,68,68,0.25)';this.style.borderColor='rgba(239,68,68,0.4)'" onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='rgba(255,255,255,0.15)'">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Main Content -->
@@ -271,10 +292,17 @@
                 <div id="searchResults"></div>
             </div>
             <div class="user-profile">
-                <span class="text-muted text-sm fw-bold">ENG <i class="fa-solid fa-chevron-down ms-1"></i></span>
+                @if(session('success'))
+                <div style="background:#d1fae5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 14px;font-size:13px;color:#065f46;font-weight:600;display:flex;align-items:center;gap:6px;">
+                    <i class="fa-solid fa-circle-check text-success"></i> {{ session('success') }}
+                </div>
+                @endif
                 <div class="d-flex align-items-center gap-2 ms-3">
-                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=00b575&color=fff" alt="User">
-                    <span class="fw-bold">Admin <i class="fa-solid fa-chevron-down ms-1 text-muted"></i></span>
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()?->name ?? 'User') }}&background=00b575&color=fff" alt="User" style="width:36px;height:36px;border-radius:50%;">
+                    <div>
+                        <div class="fw-bold" style="font-size:14px;">{{ auth()->user()?->name ?? 'Guest' }}</div>
+                        <div style="font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;">{{ auth()->user()?->role ?? '' }}</div>
+                    </div>
                 </div>
             </div>
         </div>
