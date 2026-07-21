@@ -327,7 +327,7 @@
     {{-- RIGHT PANEL --}}
     <div class="right-panel">
         <div class="form-header">
-            <h1>Selamat Datang 👋</h1>
+            <h1>Selamat Datang</h1>
             <p>Masuk ke dashboard Supply Chain Risk Intelligence Platform</p>
         </div>
 
@@ -347,13 +347,6 @@
             </div>
         @endif
 
-        {{-- Demo Credentials --}}
-        <div class="demo-card">
-            <p>
-                <strong>🎯 Demo Login:</strong><br>
-                Email: <strong>admin@supplychain.com</strong> &nbsp;|&nbsp; Password: <strong>password123</strong>
-            </p>
-        </div>
 
         <form method="POST" action="{{ route('login.post') }}">
             @csrf

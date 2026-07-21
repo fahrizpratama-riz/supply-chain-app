@@ -534,6 +534,22 @@
     .ds-status.ok { background: #d1fae5; color: #065f46; }
     .ds-status.limited { background: #fef3c7; color: #92400e; }
     .ds-status.offline { background: #fee2e2; color: #991b1b; }
+
+    /* ===== DARK MODE OVERRIDES ===== */
+    :root.dark-mode .settings-nav { background: var(--card-bg); border: 1px solid #2d3748; }
+    :root.dark-mode .settings-nav-item { color: var(--text-muted); }
+    :root.dark-mode .settings-nav-item:hover { background: var(--bg-color); color: var(--text-dark); }
+    :root.dark-mode .settings-section { background: var(--card-bg); border-color: #2d3748; }
+    :root.dark-mode .settings-section-title, :root.dark-mode .setting-row-label, :root.dark-mode .watchlist-name, :root.dark-mode .sys-info-row .si-val, :root.dark-mode .weight-val, :root.dark-mode .ds-name, :root.dark-mode .about-logo-wrap h4 { color: var(--text-dark); }
+    :root.dark-mode .setting-row, :root.dark-mode .sys-info-row, :root.dark-mode .datasource-item { border-bottom-color: #2d3748; }
+    :root.dark-mode .setting-input, :root.dark-mode .setting-select { background: var(--bg-color); border-color: #2d3748; color: var(--text-dark); }
+    :root.dark-mode .btn-setting-secondary { background: var(--bg-color); color: var(--text-dark); border-color: #2d3748; }
+    :root.dark-mode .btn-setting-secondary:hover { background: #2d3748; }
+    :root.dark-mode .btn-setting-danger { background: var(--bg-color); }
+    :root.dark-mode .watchlist-item { background: var(--card-bg); border-color: #2d3748; }
+    :root.dark-mode .api-key-wrap .api-eye-btn { color: var(--text-muted); }
+    :root.dark-mode .color-swatch.selected { border-color: var(--text-dark); }
+    :root.dark-mode .cache-bar-wrap { background: #2d3748; }
 </style>
 @endsection
 
@@ -910,7 +926,7 @@
                     </div>
                     <select class="setting-select" id="themeMode">
                         <option value="light" selected>☀️ Light Mode</option>
-                        <option value="dark" disabled>🌙 Dark Mode (Coming Soon)</option>
+                        <option value="dark">🌙 Dark Mode</option>
                     </select>
                 </div>
 
@@ -1483,7 +1499,21 @@ function savePreferences() {
         defaultCountry: $('#prefDefaultCountry').val(),
         mapZoom: $('#prefMapZoom').val(),
     };
+    
+    const oldPrefs = JSON.parse(localStorage.getItem('dashboard_prefs') || '{}');
     localStorage.setItem('dashboard_prefs', JSON.stringify(prefs));
+    
+    if (prefs.theme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+    } else {
+        document.documentElement.classList.remove('dark-mode');
+    }
+
+    if (oldPrefs.lang !== prefs.lang) {
+        window.location.reload();
+        return;
+    }
+
     showToast('Preferences saved!', 'success');
 }
 
@@ -1565,6 +1595,7 @@ function loadSavedSettings() {
     // Prefs
     const prefs = JSON.parse(localStorage.getItem('dashboard_prefs') || '{}');
     if (prefs.lang)  $('#prefLang').val(prefs.lang);
+    if (prefs.theme) $('#themeMode').val(prefs.theme);
     if (prefs.mapZoom) $('#prefMapZoom').val(prefs.mapZoom);
 
     // Notifications
@@ -1617,6 +1648,29 @@ $(document).ready(function() {
 
     loadSavedSettings();
     refreshCacheInfo();
+
+    // Live theme mode switcher
+    $('#themeMode').on('change', function() {
+        const theme = $(this).val();
+        const prefs = JSON.parse(localStorage.getItem('dashboard_prefs') || '{}');
+        prefs.theme = theme;
+        localStorage.setItem('dashboard_prefs', JSON.stringify(prefs));
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+        } else {
+            document.documentElement.classList.remove('dark-mode');
+        }
+        showToast('Theme updated to ' + theme + ' mode!', 'success');
+    });
+
+    // Live language switcher
+    $('#prefLang').on('change', function() {
+        const lang = $(this).val();
+        const prefs = JSON.parse(localStorage.getItem('dashboard_prefs') || '{}');
+        prefs.lang = lang;
+        localStorage.setItem('dashboard_prefs', JSON.stringify(prefs));
+        window.location.reload();
+    });
 });
 </script>
 @endsection
