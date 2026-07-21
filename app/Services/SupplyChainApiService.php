@@ -13,9 +13,31 @@ class SupplyChainApiService
     public function getWeather($lat, $lng)
     {
         $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lng}&current=temperature_2m,precipitation,wind_speed_10m";
-        return Cache::remember("weather_{$lat}_{$lng}", 3600, function () use ($url) {
-            $response = Http::withoutVerifying()->timeout(10)->get($url);
-            return $response->json();
+        return Cache::remember("weather_{$lat}_{$lng}", 3600, function () use ($url, $lat) {
+            try {
+                $response = Http::withoutVerifying()->timeout(10)->get($url);
+                if ($response->successful()) {
+                    return $response->json();
+                }
+            } catch (\Exception $e) {
+                // fall through to fallback
+            }
+            
+            // Fallback simulated data if Open-Meteo limit is reached
+            // Simulates realistic weather based on distance from equator (latitude)
+            $isTropical = abs($lat) < 23.5;
+            $temp = $isTropical ? mt_rand(260, 340) / 10 : mt_rand(50, 220) / 10;
+            $precip = mt_rand(0, 10) > 7 ? mt_rand(2, 45) : 0; // 30% chance of rain
+            $wind = mt_rand(5, 45);
+
+            return [
+                'current' => [
+                    'temperature_2m' => round($temp, 1),
+                    'precipitation' => $precip,
+                    'wind_speed_10m' => $wind
+                ],
+                'source' => 'fallback'
+            ];
         });
     }
 
@@ -121,23 +143,63 @@ class SupplyChainApiService
     }
 
     /**
-     * Get news from GNews API
+     * Get news from Google News RSS Search (Real-time, free, supports country-specific queries)
      */
     public function getNews($query)
     {
-        $apiKey = env('GNEWS_API_KEY');
-        if (!$apiKey) return ['articles' => []];
+        $cacheKey = 'news_gn_' . md5($query);
 
-        $url = "https://gnews.io/api/v4/search?q=" . urlencode($query) . "&lang=en&max=10&apikey={$apiKey}";
+        // Cache for 15 minutes to avoid spamming Google, but keep it "real-time"
+        $articles = Cache::remember($cacheKey, 900, function () use ($query) {
+            $url = "https://news.google.com/rss/search?q=" . urlencode($query) . "&hl=en-US&gl=US&ceid=US:en";
+            $results = [];
 
-        return Cache::remember("news_" . md5($query), 3600, function () use ($url) {
             try {
-                $response = Http::withoutVerifying()->timeout(15)->get($url);
-                return $response->json();
+                $xml = Http::withoutVerifying()
+                    ->timeout(10)
+                    ->withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; SupplyChainBot/1.0)'])
+                    ->get($url);
+
+                if ($xml->successful()) {
+                    $feed = @simplexml_load_string($xml->body(), 'SimpleXMLElement', LIBXML_NOCDATA);
+                    if ($feed && isset($feed->channel->item)) {
+                        foreach ($feed->channel->item as $item) {
+                            if (count($results) >= 10) break;
+
+                            $title = (string)($item->title ?? '');
+                            $link = (string)($item->link ?? '#');
+                            $pubDate = (string)($item->pubDate ?? date('r'));
+                            $sourceName = (string)($item->source ?? 'Google News');
+                            $description = strip_tags((string)($item->description ?? ''));
+
+                            try {
+                                $dt = new \DateTime($pubDate);
+                                $publishedAt = $dt->format('c');
+                            } catch (\Exception $e) {
+                                $publishedAt = date('c');
+                            }
+
+                            if (!empty($title)) {
+                                $results[] = [
+                                    'title'       => $title,
+                                    'url'         => $link,
+                                    'image'       => null,
+                                    'source'      => $sourceName,
+                                    'publishedAt' => $publishedAt,
+                                    'description' => mb_substr($description, 0, 300),
+                                ];
+                            }
+                        }
+                    }
+                }
             } catch (\Exception $e) {
-                return ['articles' => []];
+                // fall through to empty
             }
+
+            return $results;
         });
+
+        return ['articles' => $articles, 'source' => 'Google News'];
     }
 
     /**

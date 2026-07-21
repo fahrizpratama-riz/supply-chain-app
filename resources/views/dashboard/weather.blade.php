@@ -269,6 +269,8 @@ let weatherMap;
 let weatherMarker;
 let currentWeatherData = null;
 
+let allMarkers = [];
+
 $(document).ready(function() {
     initMap();
 
@@ -278,8 +280,33 @@ $(document).ready(function() {
         let opts = '<option value="">— Select a Country —</option>';
         data.forEach(c => {
             opts += `<option value="${c.iso_code}" data-lat="${c.latitude||0}" data-lng="${c.longitude||0}">${c.name}</option>`;
+            
+            // Add clickable marker on the map for every country
+            if (c.latitude && c.longitude) {
+                let m = L.circleMarker([c.latitude, c.longitude], {
+                    radius: 5,
+                    fillColor: "#667eea",
+                    color: "#fff",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(weatherMap);
+                
+                m.bindTooltip(c.name);
+                m.on('click', function() {
+                    $('#weatherCountrySelect').val(c.iso_code).trigger('change');
+                });
+                allMarkers.push(m);
+            }
         });
         $('#weatherCountrySelect').html(opts);
+        
+        // Auto-load default country (e.g., IDN - Indonesia) if available
+        if ($('#weatherCountrySelect option[value="IDN"]').length > 0) {
+            $('#weatherCountrySelect').val('IDN').trigger('change');
+        } else if (data.length > 0) {
+            $('#weatherCountrySelect').val(data[0].iso_code).trigger('change');
+        }
     });
 
     $('#loadWeatherBtn').on('click', loadWeather);

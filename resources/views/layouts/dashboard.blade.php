@@ -345,7 +345,7 @@
 
             let html = '';
             matches.forEach(c => {
-                html += `<div class="result-item" data-iso="${c.iso_code}">
+                html += `<div class="result-item" data-iso="${c.iso_code}" data-currency="${c.currency_code || ''}">
                     <i class="fa-solid fa-location-dot" style="color:#00b575;"></i>
                     <span>${c.name}</span>
                     <span class="region-tag">${c.region || ''}</span>
@@ -365,6 +365,31 @@
             const $sel = $('#countrySelector');
             if ($sel.length) {
                 $sel.val(iso).trigger('change');
+            }
+            
+            // If on news page (countryFilter exists), update it with name
+            const $newsSel = $('#countryFilter');
+            if ($newsSel.length) {
+                $newsSel.val(name).trigger('change');
+            }
+
+            // If on weather page (weatherCountrySelect exists), update it with iso
+            const $weatherSel = $('#weatherCountrySelect');
+            if ($weatherSel.length) {
+                $weatherSel.val(iso).trigger('change');
+            }
+
+            // If on analytics page (analCountry exists), update it with iso
+            const $analSel = $('#analCountry');
+            if ($analSel.length) {
+                $analSel.val(iso).trigger('change');
+            }
+
+            // If on currency page (currencySearch exists), update it with the currency code
+            const currCode = $(this).data('currency');
+            const $currSearch = $('#currencySearch');
+            if ($currSearch.length && currCode) {
+                $currSearch.val(currCode).trigger('input');
             }
         });
 

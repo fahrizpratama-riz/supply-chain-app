@@ -10,7 +10,7 @@ class PortSeeder extends Seeder
 {
     public function run()
     {
-        $ports = [
+        $realPorts = [
             ['name' => 'Port of Hamburg', 'iso' => 'DEU', 'lat' => 53.5488, 'lng' => 9.9872],
             ['name' => 'Port of Shanghai', 'iso' => 'CHN', 'lat' => 31.2304, 'lng' => 121.4737],
             ['name' => 'Port of Tanjung Priok', 'iso' => 'IDN', 'lat' => -6.1115, 'lng' => 106.8837],
@@ -33,8 +33,13 @@ class PortSeeder extends Seeder
             ['name' => 'Port of Klang', 'iso' => 'MYS', 'lat' => 3.0000, 'lng' => 101.3928],
         ];
 
+        DB::table('ports')->truncate();
+
         $portsToInsert = [];
-        foreach ($ports as $p) {
+        $seededIso = [];
+
+        // Insert real ports first
+        foreach ($realPorts as $p) {
             $country = Country::where('iso_code', $p['iso'])->first();
             if ($country) {
                 $portsToInsert[] = [
@@ -45,9 +50,34 @@ class PortSeeder extends Seeder
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
+                $seededIso[] = $p['iso'];
             }
         }
 
-        DB::table('ports')->insert($portsToInsert);
+        // Insert default ports for all remaining countries
+        $allCountries = Country::all();
+        foreach ($allCountries as $country) {
+            if (!in_array($country->iso_code, $seededIso)) {
+                // Generate a slight offset so the pin isn't exactly at the country center
+                $lat = $country->latitude ? $country->latitude + (mt_rand(-50, 50) / 100) : null;
+                $lng = $country->longitude ? $country->longitude + (mt_rand(-50, 50) / 100) : null;
+                
+                if ($lat && $lng) {
+                    $portsToInsert[] = [
+                        'country_id' => $country->id,
+                        'port_name' => 'Main Port of ' . $country->name,
+                        'latitude' => $lat,
+                        'longitude' => $lng,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+            }
+        }
+
+        // Insert in chunks to avoid large query limits
+        foreach (array_chunk($portsToInsert, 100) as $chunk) {
+            DB::table('ports')->insert($chunk);
+        }
     }
 }

@@ -220,12 +220,12 @@
             <div class="mb-3">
                 <label class="fw-bold mb-1 d-block" style="font-size:13px; opacity:0.85;">To Currency</label>
                 <select id="convTo" onchange="convertCurrency()" style="background:rgba(255,255,255,0.2); border:none; border-radius:10px; padding:10px 14px; color:#fff; font-size:14px; font-weight:700; width:100%; outline:none;">
-                    <option value="EUR">EUR — Euro</option>
-                    <option value="IDR">IDR — Indonesian Rupiah</option>
-                    <option value="JPY">JPY — Japanese Yen</option>
-                    <option value="GBP">GBP — British Pound</option>
-                    <option value="CNY">CNY — Chinese Yuan</option>
-                    <option value="SGD">SGD — Singapore Dollar</option>
+                    <option style="color:#1a1f2e;" value="EUR">EUR — Euro</option>
+                    <option style="color:#1a1f2e;" value="IDR">IDR — Indonesian Rupiah</option>
+                    <option style="color:#1a1f2e;" value="JPY">JPY — Japanese Yen</option>
+                    <option style="color:#1a1f2e;" value="GBP">GBP — British Pound</option>
+                    <option style="color:#1a1f2e;" value="CNY">CNY — Chinese Yuan</option>
+                    <option style="color:#1a1f2e;" value="SGD">SGD — Singapore Dollar</option>
                 </select>
             </div>
             <div class="text-center mt-3">
@@ -401,7 +401,11 @@ function renderCurrencyGrid() {
 
 function filterCurrencyGrid(q) {
     if (!q) { renderCurrencyGrid(); return; }
-    const entries = Object.entries(allRates).filter(([code]) => code.includes(q)).slice(0, 24);
+    const entries = Object.entries(allRates).filter(([code]) => {
+        const kc = KEY_CURRENCIES.find(k => k.code === code);
+        const nameMatch = kc ? kc.name.toUpperCase().includes(q) : false;
+        return code.includes(q) || nameMatch;
+    }).slice(0, 24);
     let html = '';
     entries.forEach(([code, rate]) => {
         const kc = KEY_CURRENCIES.find(k => k.code === code);

@@ -214,16 +214,16 @@
     <button class="topic-btn active active-logistics" onclick="loadNews('supply chain logistics', 'logistics', this)">
         📦 Logistics
     </button>
-    <button class="topic-btn" onclick="loadNews('global trade export import', 'trade', this)">
+    <button class="topic-btn" onclick="loadNews('global trade geopolitics', 'trade', this)">
         🤝 Trade
     </button>
-    <button class="topic-btn" onclick="loadNews('shipping port freight', 'shipping', this)">
+    <button class="topic-btn" onclick="loadNews('shipping freight port', 'shipping', this)">
         🚢 Shipping
     </button>
-    <button class="topic-btn" onclick="loadNews('global economy inflation GDP', 'economy', this)">
+    <button class="topic-btn" onclick="loadNews('economy inflation currency', 'economy', this)">
         💰 Economy
     </button>
-    <button class="topic-btn" onclick="loadNews('geopolitics conflict sanctions', 'geopolitics', this)">
+    <button class="topic-btn" onclick="loadNews('geopolitics sanctions trade war', 'geopolitics', this)">
         🌐 Geopolitics
     </button>
     <div class="ms-auto">
@@ -312,14 +312,15 @@ $(document).ready(function() {
     $('#countryFilter').on('change', function() {
         const country = $(this).val();
         const queries = {
-            logistics: 'supply chain logistics',
-            trade: 'global trade export import',
-            shipping: 'shipping port freight',
-            economy: 'global economy inflation GDP',
-            geopolitics: 'geopolitics conflict sanctions'
+            logistics:   'supply chain logistics',
+            trade:       'global trade geopolitics',
+            shipping:    'shipping freight port',
+            economy:     'economy inflation currency',
+            geopolitics: 'geopolitics sanctions trade war'
         };
-        let q = country ? country + ' ' + (queries[currentTopic]||'logistics') : queries[currentTopic]||'supply chain logistics';
-        fetchNews(q);
+        let baseQ = queries[currentTopic] || 'supply chain logistics';
+        let q = country ? country + ' ' + baseQ : baseQ;
+        fetchNews(q, currentTopic);
     });
 
     // Init pie chart
@@ -327,6 +328,12 @@ $(document).ready(function() {
 
     // Load default news
     loadNews('supply chain logistics', 'logistics', document.querySelector('.topic-btn.active'));
+
+    // Auto-refresh every 5 minutes to stay current
+    setInterval(() => {
+        const activeBtn = document.querySelector('.topic-btn.active');
+        if (activeBtn) activeBtn.click();
+    }, 300000);
 });
 
 function initPieChart() {
@@ -452,7 +459,13 @@ function renderNews(res, topic) {
     };
     const [topicLabel, topicClass] = topicLabels[topic] || ['📰 News', 'topic-logistics'];
 
-    let html = '';
+    // Show data source badge
+    const sourceBadgeHtml = `<div class="alert alert-success alert-sm py-2 px-3 mb-3" style="font-size:12px;border-radius:10px;">
+          <i class="fa-solid fa-satellite-dish me-1"></i>
+          <strong>Google News (Real-time)</strong> — Automatically tracked for supply chain risks
+       </div>`;
+
+    let html = sourceBadgeHtml;
     articles.forEach(a => {
         const s = a.sentiment || {};
         const sent = s.sentiment || 'Neutral';
@@ -460,6 +473,8 @@ function renderNews(res, topic) {
         const sentClass = sent === 'Positive' ? 'sent-positive' : sent === 'Negative' ? 'sent-negative' : 'sent-neutral';
         const cardClass  = sent === 'Positive' ? 'positive' : sent === 'Negative' ? 'negative' : 'neutral';
         const timeAgo = a.publishedAt ? formatTimeAgo(a.publishedAt) : '';
+        const desc = a.description ? `<div class="news-desc">${a.description}</div>` : '';
+        const img  = a.image ? `<img src="${a.image}" alt="" style="width:80px;height:55px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display='none'">` : '';
 
         html += `
         <div class="news-card ${cardClass}">
@@ -468,8 +483,14 @@ function renderNews(res, topic) {
                 <span class="topic-tag ${topicClass}">${topicLabel}</span>
                 <span class="sentiment-tag ${sentClass}">${sent === 'Positive' ? '😊' : sent === 'Negative' ? '😟' : '😐'} ${sent}</span>
             </div>
-            <div class="news-title">
-                <a href="${a.url || '#'}" target="_blank">${a.title || 'No title'}</a>
+            <div class="d-flex gap-3 align-items-start">
+                ${img}
+                <div style="flex:1;min-width:0;">
+                    <div class="news-title">
+                        <a href="${a.url || '#'}" target="_blank" rel="noopener">${a.title || 'No title'}</a>
+                    </div>
+                    ${desc}
+                </div>
             </div>
             <div class="score-row">
                 <span class="score-chip">👍 Pos: ${sp2.positive||0}%</span>
