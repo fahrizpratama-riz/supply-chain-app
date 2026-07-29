@@ -1,0 +1,6 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "php artisan migrate --force && /compat/start-nginx"
+restartPolicyType = "on-failure"

@@ -181,12 +181,16 @@
         :root.dark-mode .news-card,
         :root.dark-mode .weather-card,
         :root.dark-mode .filter-box,
+        :root.dark-mode .filter-bar,
         :root.dark-mode .table-card,
         :root.dark-mode .port-card,
         :root.dark-mode .stat-card-custom,
         :root.dark-mode .watchlist-item,
         :root.dark-mode .datasource-item,
-        :root.dark-mode .selector-bar {
+        :root.dark-mode .selector-bar,
+        :root.dark-mode .compare-card,
+        :root.dark-mode .compare-summary-card,
+        :root.dark-mode .admin-stat-card {
             background-color: var(--card-bg) !important;
             color: var(--text-dark) !important;
             border-color: #2d3748 !important;
@@ -200,7 +204,7 @@
         :root.dark-mode .setting-input,
         :root.dark-mode .setting-select,
         :root.dark-mode .search-bar input {
-            background-color: var(--card-bg) !important;
+            background-color: var(--bg-color) !important;
             color: #f0f4f8 !important;
             border-color: #2d3748 !important;
         }
