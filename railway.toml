@@ -1,5 +1,4 @@
 [build]
-builder = "nixpacks"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
-[deploy]
-startCommand = "php artisan migrate --force && /compat/start-nginx"
